@@ -1,0 +1,5 @@
+{
+  "name": "Bushido Graduation Manager",
+  "description": "A comprehensive management system for Karate Dojos to handle student registries, exam grading, and certification generation.",
+  "requestFramePermissions": []
+}
