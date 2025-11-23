@@ -1,21 +1,21 @@
-
 import React, { useState } from 'react';
 import { AppScreen } from '../types';
-import { Menu, Shield, Users, CheckSquare, Award, Settings, X, Home, Landmark, Sliders, ClipboardList } from 'lucide-react';
+import { Menu, Shield, Users, CheckSquare, Award, Settings, X, LogOut, Landmark, ClipboardList } from 'lucide-react';
 
 interface HeaderProps {
   currentScreen: AppScreen;
   setScreen: (s: AppScreen) => void;
   isTrial: boolean;
+  onLogout: () => void; // Updated: Recieve handler from parent
 }
 
-const Header: React.FC<HeaderProps> = ({ currentScreen, setScreen, isTrial }) => {
+const Header: React.FC<HeaderProps> = ({ currentScreen, setScreen, isTrial, onLogout }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
     { screen: AppScreen.DOJO, label: 'Meu Dojo', icon: Landmark },
-    { screen: AppScreen.SETTINGS, label: 'Configurações', icon: Settings }, // Ícone de Engrenagem para Configurações Gerais
-    { screen: AppScreen.DASHBOARD, label: 'Dados do Exame', icon: ClipboardList }, // Ícone de Prancheta para o Evento
+    { screen: AppScreen.SETTINGS, label: 'Configurações', icon: Settings },
+    { screen: AppScreen.DASHBOARD, label: 'Dados do Exame', icon: ClipboardList },
     { screen: AppScreen.STUDENTS, label: 'Alunos', icon: Users },
     { screen: AppScreen.SELECTION, label: 'Seleção', icon: CheckSquare },
     { screen: AppScreen.EVALUATION, label: 'Avaliação', icon: Shield },
@@ -27,25 +27,28 @@ const Header: React.FC<HeaderProps> = ({ currentScreen, setScreen, isTrial }) =>
     setIsMobileMenuOpen(false);
   };
 
+  const handleLogoutClick = async () => {
+    if (confirm("Deseja sair do sistema?")) {
+      onLogout();
+    }
+  };
+
   return (
     <>
-      {/* Top Navbar */}
       <header className="bg-bushido-black text-white shadow-lg sticky top-0 z-40 no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo Area */}
             <div className="flex items-center gap-2 z-50 cursor-pointer" onClick={() => setScreen(AppScreen.DOJO)}>
               <div className="bg-bushido-red p-1.5 rounded">
                 <Shield className="h-6 w-6 text-white" />
               </div>
               <div>
                   <h1 className="text-xl font-bold font-jp tracking-wider">BUSHIDO</h1>
-                  <p className="text-xs text-gray-400 -mt-1 uppercase tracking-widest">Manager</p>
+                  <p className="text-xs text-gray-400 -mt-1 uppercase tracking-widest">Graduation Manager</p>
               </div>
             </div>
 
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex space-x-1 overflow-x-auto">
+            <nav className="hidden md:flex space-x-1 items-center">
               {navItems.map((item) => (
                 <button
                   key={item.screen}
@@ -60,9 +63,15 @@ const Header: React.FC<HeaderProps> = ({ currentScreen, setScreen, isTrial }) =>
                   {item.label}
                 </button>
               ))}
+              <div className="h-6 w-px bg-gray-700 mx-2"></div>
+              <button 
+                onClick={handleLogoutClick}
+                className="text-gray-300 hover:text-white p-2 rounded hover:bg-gray-800 flex items-center gap-2 text-sm"
+              >
+                <LogOut className="w-4 h-4" /> Sair
+              </button>
             </nav>
             
-            {/* Mobile Menu Button */}
             <div className="md:hidden z-50">
               <button 
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -79,7 +88,6 @@ const Header: React.FC<HeaderProps> = ({ currentScreen, setScreen, isTrial }) =>
         </div>
       </header>
 
-      {/* Mobile Sidebar / Drawer Overlay */}
       {isMobileMenuOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden backdrop-blur-sm transition-opacity"
@@ -87,19 +95,16 @@ const Header: React.FC<HeaderProps> = ({ currentScreen, setScreen, isTrial }) =>
         />
       )}
 
-      {/* Mobile Sidebar / Drawer Content */}
       <div 
         className={`fixed inset-y-0 left-0 w-64 bg-bushido-black z-50 transform transition-transform duration-300 ease-in-out md:hidden shadow-2xl border-r border-gray-800 ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
-          {/* Sidebar Header */}
           <div className="h-16 flex items-center px-6 border-b border-gray-800 bg-bushido-dark">
             <span className="text-white font-jp font-bold text-lg tracking-wider">MENU</span>
           </div>
 
-          {/* Sidebar Links */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
             {navItems.map((item) => (
               <button
@@ -117,13 +122,14 @@ const Header: React.FC<HeaderProps> = ({ currentScreen, setScreen, isTrial }) =>
             ))}
           </nav>
 
-          {/* Sidebar Footer */}
-          <div className="p-4 border-t border-gray-800">
-            <div className="flex items-center gap-3 text-gray-500 px-4 py-2">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-              <span className="text-xs uppercase tracking-widest">Sistema Online</span>
-            </div>
-            <p className="text-xs text-gray-600 text-center mt-4">v1.2.0 Beta</p>
+          <div className="p-4 border-t border-gray-800 space-y-4">
+             <button 
+                onClick={handleLogoutClick}
+                className="w-full flex items-center justify-center gap-2 bg-gray-800 text-white py-2 rounded hover:bg-gray-700"
+              >
+                <LogOut className="w-4 h-4" /> Sair
+             </button>
+            <p className="text-xs text-gray-600 text-center">v1.3.0</p>
           </div>
         </div>
       </div>

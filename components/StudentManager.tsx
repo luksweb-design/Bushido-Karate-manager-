@@ -17,8 +17,7 @@ const StudentManager: React.FC<Props> = ({ state, updateState, onNext }) => {
   
   const [viewMode, setViewMode] = useState<'simple' | 'full'>('simple');
   const [formData, setFormData] = useState<Partial<Student>>({});
-  const [historyItem, setHistoryItem] = useState<Partial<ExamHistoryItem>>({});
-
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const calculateAge = (dateString?: string) => {
@@ -89,7 +88,6 @@ const StudentManager: React.FC<Props> = ({ state, updateState, onNext }) => {
     }
   };
 
-  // --- MANUAL PROMOTION LOGIC ---
   const handlePromoteStudent = (student: Student) => {
      const ranks = state.config.faixas;
      const currentIndex = ranks.indexOf(student.graduacao);
@@ -113,25 +111,375 @@ const StudentManager: React.FC<Props> = ({ state, updateState, onNext }) => {
      }
   };
 
+  // --- HTML REPORT GENERATION (BUSHIDO DIGITAL CARD) ---
   const generateStudentReport = (student: Student) => {
-    const doc = new jsPDF();
-    if (state.dojoProfile.logoUrl) {
-        try { doc.addImage(state.dojoProfile.logoUrl, 'PNG', 170, 10, 20, 20); } catch (e) {}
-    }
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("Ficha Cadastral do Aluno", 20, 20);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(state.config.academia, 20, 26);
-    doc.setDrawColor(200);
-    doc.line(20, 35, 190, 35);
-    
-    let y = 55;
-    doc.text(`Nome: ${student.nome}`, 20, y);
-    doc.text(`Graduação: ${student.graduacao}`, 100, y);
     const safeName = student.nome.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    doc.save(`Ficha_${safeName}.pdf`);
+    
+    // Pega o último exame para exibir os dados "atuais"
+    const lastExam = student.historicoExames && student.historicoExames.length > 0 
+        ? student.historicoExames[student.historicoExames.length - 1] 
+        : null;
+
+    // Gera linhas do gráfico de histórico (CSS Charts)
+    const historyChart = (student.historicoExames || []).map(exam => {
+        const heightPercent = exam.nota ? (exam.nota * 10) : 0;
+        return `
+            <div class="chart-col">
+                <div class="bar" style="height: ${heightPercent}%;">
+                    <span class="bar-tooltip">${exam.nota?.toFixed(1) || '-'}</span>
+                </div>
+                <span class="label">${new Date(exam.data).toLocaleDateString('pt-BR').slice(0,5)}</span>
+            </div>
+        `;
+    }).join('');
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bushido Card - ${student.nome}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+          
+          :root {
+            --bushido-red: #D81111;
+            --bushido-black: #111111;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+          }
+
+          body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+          }
+
+          .digital-card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 420px;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            position: relative;
+          }
+
+          /* HERO HEADER */
+          .hero {
+            background: linear-gradient(135deg, #111 0%, #2a2a2a 100%);
+            height: 160px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
+          
+          .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: var(--card-bg);
+            border-radius: 24px 24px 0 0;
+          }
+
+          .dojo-name {
+            color: rgba(255,255,255,0.2);
+            font-weight: 800;
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            position: absolute;
+            top: 20px;
+          }
+
+          /* PROFILE IMAGE */
+          .profile-wrapper {
+            position: relative;
+            margin-top: -80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+          }
+
+          .avatar-ring {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: linear-gradient(to bottom, var(--bushido-red), #ff4d4d);
+            padding: 4px;
+            box-shadow: 0 10px 20px rgba(216, 17, 17, 0.3);
+          }
+
+          .avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #eee;
+            border: 4px solid white;
+            object-fit: cover;
+            display: block;
+          }
+
+          .rank-badge {
+            background: var(--bushido-black);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: -16px;
+            z-index: 11;
+            border: 2px solid white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+          }
+
+          /* INFO SECTION */
+          .info-section {
+            text-align: center;
+            padding: 10px 20px;
+          }
+
+          .student-name {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--bushido-black);
+            margin: 10px 0 5px 0;
+          }
+
+          .congrats-text {
+            color: var(--bushido-red);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+          }
+
+          /* STATS GRID (RPG STYLE) */
+          .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 16px;
+            margin: 0 20px 20px 20px;
+          }
+
+          .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+          }
+          
+          .stat-card::before {
+            content: '';
+            position: absolute;
+            left: 0; 
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--bushido-red);
+          }
+
+          .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #888;
+            font-weight: 700;
+            letter-spacing: 1px;
+          }
+
+          .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--bushido-black);
+          }
+
+          /* EVOLUTION CHART */
+          .evolution-section {
+            padding: 0 20px 20px 20px;
+          }
+          
+          .section-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #444;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+
+          .chart-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 100px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+          }
+
+          .chart-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+          }
+
+          .bar {
+            width: 12px;
+            background: linear-gradient(to top, #ddd, var(--bushido-red));
+            border-radius: 6px 6px 0 0;
+            position: relative;
+            animation: grow 1s ease-out;
+            min-height: 4px;
+          }
+
+          .bar-tooltip {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: var(--bushido-red);
+          }
+
+          .label {
+            margin-top: 8px;
+            font-size: 0.65rem;
+            color: #999;
+          }
+
+          /* ACTIONS */
+          .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: var(--bushido-black);
+            color: white;
+            text-decoration: none;
+            padding: 16px;
+            margin: 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+          }
+
+          .action-btn:active {
+            transform: scale(0.98);
+          }
+          
+          .action-icon {
+            width: 20px;
+            height: 20px;
+          }
+
+          .footer {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #aaa;
+            padding-bottom: 20px;
+          }
+
+          @keyframes grow {
+            from { height: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="digital-card">
+          <div class="hero">
+            <div class="dojo-name">BUSHIDO</div>
+          </div>
+          
+          <div class="profile-wrapper">
+            <div class="avatar-ring">
+              ${student.fotoUrl 
+                ? `<img src="${student.fotoUrl}" class="avatar" alt="${student.nome}" />` 
+                : `<div class="avatar" style="display:flex;align-items:center;justify-content:center;font-size:3rem;background:#fff;color:#ccc;">🥋</div>`
+              }
+            </div>
+            <div class="rank-badge">${student.graduacao}</div>
+          </div>
+
+          <div class="info-section">
+            <h1 class="student-name">${student.nome}</h1>
+            <p class="congrats-text">🎉 Parabéns pela nova conquista!</p>
+          </div>
+
+          ${lastExam ? `
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Nota Média</div>
+              <div class="stat-value" style="color: var(--bushido-red);">${lastExam.nota?.toFixed(1) || '-'}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Graduação</div>
+              <div class="stat-value" style="font-size:1rem;">${student.graduacao.split(' ')[0]}</div>
+            </div>
+            <div class="stat-card">
+               <div class="stat-label">Data</div>
+               <div class="stat-value" style="font-size:1rem;">${new Date(lastExam.data).toLocaleDateString('pt-BR').slice(0,5)}</div>
+            </div>
+            <div class="stat-card">
+               <div class="stat-label">Local</div>
+               <div class="stat-value" style="font-size:0.8rem;">${lastExam.local || 'Dojo'}</div>
+            </div>
+          </div>
+          ` : ''}
+
+          <div class="evolution-section">
+            <div class="section-title">
+               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+               Histórico de Evolução
+            </div>
+            <div class="chart-container">
+               ${historyChart}
+            </div>
+          </div>
+
+          <a href="../Certificados/Certificado_${safeName}.pdf" class="action-btn">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Baixar Certificado Digital
+          </a>
+
+          <div class="footer">
+             Verificado por ${state.config.academia} • Bushido System
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `BushidoCard_${safeName}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleShareStudent = async (student: Student) => {
@@ -207,7 +555,7 @@ const StudentManager: React.FC<Props> = ({ state, updateState, onNext }) => {
                   </div>
                 </div>
                 
-                {/* ACTION BUTTONS: Gray (faded) by default, Colored on Hover */}
+                {/* ACTION BUTTONS */}
                 <div className="ml-5 flex-shrink-0 flex gap-2">
                   <button 
                     onClick={() => handleShareStudent(student)}
@@ -219,14 +567,14 @@ const StudentManager: React.FC<Props> = ({ state, updateState, onNext }) => {
                   <button 
                     onClick={() => generateStudentReport(student)}
                     className="text-gray-300 hover:text-green-600 p-2 rounded-full hover:bg-green-50 transition-all transform hover:scale-110"
-                    title="Baixar Relatório (PDF)"
+                    title="Gerar Bushido Card (HTML)"
                   >
                     <FileDown className="h-5 w-5" />
                   </button>
                   <button 
                     onClick={() => handlePromoteStudent(student)}
                     className="text-gray-300 hover:text-orange-500 p-2 rounded-full hover:bg-orange-50 transition-all transform hover:scale-110"
-                    title="Promover Aluno Manualmente (Próxima Faixa)"
+                    title="Promover Aluno Manualmente"
                   >
                     <ArrowUpCircle className="h-5 w-5" />
                   </button>

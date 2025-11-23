@@ -1,7 +1,7 @@
 
 import React, { useRef } from 'react';
 import { DojoState } from '../types';
-import { ArrowRight, Camera, Building2, CreditCard, MapPin, Mail, Phone, BadgeCheck, Globe } from 'lucide-react';
+import { ArrowRight, Camera, Building2, CreditCard, MapPin, Mail, Phone, BadgeCheck, Globe, HelpCircle } from 'lucide-react';
 
 interface Props {
   state: DojoState;
@@ -75,18 +75,30 @@ const DojoProfile: React.FC<Props> = ({ state, updateState, onNext }) => {
             </p>
           </div>
 
-          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-             <div className="flex items-center gap-2 mb-2">
-               <BadgeCheck className="w-5 h-5 text-indigo-600" />
-               <h4 className="font-bold text-indigo-800">Bushido Pass</h4>
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 relative overflow-visible">
+             <div className="flex items-center justify-between mb-2">
+               <div className="flex items-center gap-2">
+                 <BadgeCheck className="w-5 h-5 text-indigo-600" />
+                 <h4 className="font-bold text-indigo-800">Bushido Pass</h4>
+               </div>
+               
+               {/* Tooltip Bushido Pass */}
+               <div className="relative group">
+                  <HelpCircle className="w-4 h-4 text-indigo-400 cursor-help" />
+                  <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg hidden group-hover:block z-20 pointer-events-none">
+                     O ID é um código numérico de 6 dígitos encontrado no seu perfil do aplicativo Bushido Mobile.
+                     <div className="absolute -bottom-1 right-1 w-2 h-2 bg-gray-800 transform rotate-45"></div>
+                  </div>
+               </div>
              </div>
+             
              <p className="text-xs text-indigo-700 mb-3">
-               Integre seu dojo com a rede Bushido Pass para benefícios exclusivos.
+               Integre seu dojo com a rede Bushido Pass para sincronização automática.
              </p>
              <input 
                type="text" 
-               placeholder="ID Bushido Pass (Opcional)"
-               className="w-full bg-gray-50 border border-indigo-200 rounded-md py-2 px-3 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+               placeholder="ID (Ex: 123456)"
+               className="w-full bg-white border border-indigo-200 rounded-md py-2 px-3 text-sm focus:ring-indigo-500 focus:border-indigo-500"
                value={state.dojoProfile.bushidoPassId || ''}
                onChange={(e) => handleChange('bushidoPassId', e.target.value)}
              />
@@ -123,7 +135,10 @@ const DojoProfile: React.FC<Props> = ({ state, updateState, onNext }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">CPF ou CNPJ</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center justify-between">
+                    CPF ou CNPJ
+                    <span className="text-[10px] text-gray-400 font-normal bg-gray-100 px-2 py-0.5 rounded-full">Opcional</span>
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <CreditCard className="h-5 w-5 text-gray-400" />
@@ -136,6 +151,9 @@ const DojoProfile: React.FC<Props> = ({ state, updateState, onNext }) => {
                       onChange={(e) => handleChange('documento', e.target.value)}
                     />
                   </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Usado para conferir autenticidade jurídica nos certificados gerados.
+                  </p>
                 </div>
 
                 <div>
@@ -152,6 +170,9 @@ const DojoProfile: React.FC<Props> = ({ state, updateState, onNext }) => {
                       onChange={(e) => handleChange('website', e.target.value)}
                     />
                   </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Será gerado um QR Code no certificado apontando para este link.
+                  </p>
                 </div>
 
                 <div className="md:col-span-2">

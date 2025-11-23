@@ -47,7 +47,8 @@ const Evaluation: React.FC<Props> = ({ state, updateState, onFinish }) => {
     const currentEval = state.evaluations[studentId];
     if (!currentEval) return;
 
-    const numVal = Math.max(0, Math.min(10, value)); // Clamp 0-10
+    // Arredonda para 1 casa decimal para evitar problemas de float (ex: 6.30000001)
+    const numVal = Math.round(Math.max(0, Math.min(10, value)) * 10) / 10;
     const newEval = { ...currentEval, [field]: numVal };
     
     const scores = [
@@ -58,24 +59,60 @@ const Evaluation: React.FC<Props> = ({ state, updateState, onFinish }) => {
     ];
 
     // Auto calc mean
-    const media = scores.reduce((a, b) => a + b, 0) / 4;
+    let media = scores.reduce((a, b) => a + b, 0) / 4;
+    // Arredonda média para 1 casa decimal
+    media = Math.round(media * 10) / 10;
+    
     newEval.media = media;
     
-    // --- STATUS LOGIC ---
+    // --- STATUS LOGIC (UPDATED) ---
     const system = state.config.approvalSystem || 'SPORT';
 
     if (system === 'SPORT') {
-        // Standard Logic: Mean >= 6 Passes
-        newEval.status = media >= 6 ? 'Aprovado' : 'Reprovado';
+        // REGRAS DE COMPETIÇÃO (ESPORTIVO)
+        // Excelente: >= 7.0
+        // Ótimo: 6.7 - 6.9
+        // Bom (Média): 6.4 - 6.6
+        // Razoável (Zona de Risco): 6.1 - 6.3
+        // Reprovado direto: < 6.1
+        
+        // Regra de Consistência: 
+        // Se houver 2 ou mais notas na zona "Razoável" (6.1 a 6.3) -> Reprovado (Inconsistente)
+        // Se houver 1 nota "Razoável" -> Aprovado c/ Reforço
+
+        // Conta quantas notas estão EXATAMENTE entre 6.1 e 6.3
+        const reasonableCount = scores.filter(s => s >= 6.1 && s <= 6.3).length;
+
+        if (media < 6.1) {
+            newEval.status = 'Reprovado';
+        } else if (reasonableCount >= 2) {
+             newEval.status = 'Reprovado (Inconsistente)';
+        } else {
+             // Se passou pela média e pela consistência, define o conceito
+             if (media >= 7.0) {
+                 newEval.status = 'Aprovado (Excelente)';
+             } else if (media >= 6.7) {
+                 newEval.status = 'Aprovado (Ótimo)';
+             } else if (media >= 6.4) {
+                 newEval.status = 'Aprovado (Bom)';
+             } else {
+                 // Caso matemático raro onde a média cai na zona de risco mas só tem 0 ou 1 nota razoável
+                 // Ou se a média é > 6.1 mas tem 1 nota razoável
+                 if (reasonableCount === 1) {
+                    newEval.status = 'Aprovado c/ Reforço';
+                 } else {
+                    newEval.status = 'Aprovado (Razoável)';
+                 }
+             }
+        }
+
     } else {
-        // Educational Logic
+        // EDUCATIONAL Logic (Padrão Educativo)
         if (media >= 6) {
             newEval.status = 'Aprovado';
         } else if (media < 5) {
             newEval.status = 'Reprovado';
         } else {
-            // Range 5.0 to 5.9
-            // Check for multiple 5.0s logic
             const lowScores = scores.filter(s => s >= 5 && s < 6).length;
             if (lowScores > 1) {
                 newEval.status = 'Aprovado c/ Reforço';
@@ -140,7 +177,7 @@ const Evaluation: React.FC<Props> = ({ state, updateState, onFinish }) => {
         <div>
             <h2 className="text-2xl font-bold text-gray-800 font-jp">Painel de Avaliação</h2>
             <p className="text-gray-500 text-sm">
-                {selectedStudents.length} alunos selecionados • {state.config.approvalSystem === 'EDUCATIONAL' ? 'Modo Educativo' : 'Modo Esportivo'}
+                {selectedStudents.length} alunos selecionados • {state.config.approvalSystem === 'EDUCATIONAL' ? 'Modo Educativo' : 'Modo Esportivo (Competição)'}
             </p>
         </div>
         <div className="bg-white px-4 py-2 rounded-lg shadow border border-gray-200 flex items-center gap-3">
@@ -160,6 +197,7 @@ const Evaluation: React.FC<Props> = ({ state, updateState, onFinish }) => {
         {selectedStudents.map((student) => {
           const ev = state.evaluations[student.id] || { kata: 0, kihon: 0, kumite: 0, teorico: 0, media: 0, status: 'Pendente' };
           const isApproved = ev.status.includes('Aprovado');
+          const isRejected = ev.status.includes('Reprovado');
           const isLoadingAI = loadingFeedbackIds.includes(student.id);
 
           return (
@@ -168,7 +206,9 @@ const Evaluation: React.FC<Props> = ({ state, updateState, onFinish }) => {
               {/* Card Header */}
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-bushido-black text-white flex items-center justify-center font-bold border-2 border-bushido-red">
+                    <div className={`h-10 w-10 rounded-full text-white flex items-center justify-center font-bold border-2 ${
+                        isRejected ? 'bg-red-600 border-red-800' : 'bg-bushido-black border-bushido-red'
+                    }`}>
                         {ev.media.toFixed(1)}
                     </div>
                     <div>
@@ -193,7 +233,7 @@ const Evaluation: React.FC<Props> = ({ state, updateState, onFinish }) => {
                             type="range"
                             min="0"
                             max="10"
-                            step="0.5"
+                            step="0.1"
                             value={(ev as any)[crit]}
                             onChange={(e) => updateScore(student.id, crit as keyof EvaluationType, parseFloat(e.target.value))}
                             className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-bushido-red"
@@ -202,7 +242,8 @@ const Evaluation: React.FC<Props> = ({ state, updateState, onFinish }) => {
                             type="number"
                             min="0" 
                             max="10"
-                            className="w-12 text-center text-sm font-bold border border-gray-300 bg-gray-50 rounded p-1 focus:ring-bushido-red focus:border-bushido-red"
+                            step="0.1"
+                            className="w-14 text-center text-sm font-bold border border-gray-300 bg-gray-50 rounded p-1 focus:ring-bushido-red focus:border-bushido-red"
                             value={(ev as any)[crit]}
                             onChange={(e) => updateScore(student.id, crit as keyof EvaluationType, parseFloat(e.target.value))}
                         />

@@ -185,17 +185,22 @@ const Settings: React.FC<Props> = ({ state, updateState }) => {
                   </div>
                   <div>
                     <h4 className="font-bold text-lg text-gray-900">Padrão Esportivo</h4>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">Competitivo</p>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider">Competitivo (WKF Style)</p>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <p className="text-gray-600 text-sm leading-relaxed">
-                    Ideal para avaliações técnicas objetivas focadas em performance.
+                    Avaliação técnica rigorosa baseada em faixas de pontuação.
                   </p>
                   <ul className="text-sm text-gray-600 space-y-2">
-                    <li className="flex items-center gap-2"><CheckCircle className="w-3 h-3 text-green-500" /> Notas de 0 a 10</li>
-                    <li className="flex items-center gap-2"><CheckCircle className="w-3 h-3 text-green-500" /> Média de Corte: <strong>6.0</strong></li>
-                    <li className="flex items-center gap-2"><CheckCircle className="w-3 h-3 text-green-500" /> Status simples: Aprovado / Reprovado</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-3 h-3 text-green-600" /> <strong>Aprovado (Excelente):</strong> ≥ 7.0</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-3 h-3 text-green-600" /> <strong>Aprovado (Ótimo):</strong> 6.7 - 6.9</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-3 h-3 text-green-600" /> <strong>Aprovado (Bom):</strong> 6.4 - 6.6</li>
+                    <li className="flex items-center gap-2"><AlertCircle className="w-3 h-3 text-yellow-500" /> <strong>Razoável (Risco):</strong> 6.1 - 6.3</li>
+                    <li className="flex items-center gap-2"><Trash2 className="w-3 h-3 text-red-500" /> <strong>Reprovado Direto:</strong> &lt; 6.1</li>
+                    <li className="flex items-start gap-2 text-xs bg-red-50 p-2 rounded text-red-700 border border-red-100">
+                       <strong>Regra de Consistência:</strong> 2 ou mais notas na faixa "Razoável" resultam em reprovação automática.
+                    </li>
                   </ul>
                 </div>
               </div>
