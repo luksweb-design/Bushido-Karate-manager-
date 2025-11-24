@@ -6,20 +6,20 @@ interface HeaderProps {
   currentScreen: AppScreen;
   setScreen: (s: AppScreen) => void;
   isTrial: boolean;
-  onLogout: () => void; // Updated: Recieve handler from parent
+  onLogout: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ currentScreen, setScreen, isTrial, onLogout }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { screen: AppScreen.DOJO, label: 'Meu Dojo', icon: Landmark },
-    { screen: AppScreen.SETTINGS, label: 'Configurações', icon: Settings },
-    { screen: AppScreen.DASHBOARD, label: 'Dados do Exame', icon: ClipboardList },
-    { screen: AppScreen.STUDENTS, label: 'Alunos', icon: Users },
-    { screen: AppScreen.SELECTION, label: 'Seleção', icon: CheckSquare },
-    { screen: AppScreen.EVALUATION, label: 'Avaliação', icon: Shield },
-    { screen: AppScreen.RESULTS, label: 'Resultados', icon: Award },
+    { screen: AppScreen.DOJO, label: 'DOJO', icon: Landmark },
+    { screen: AppScreen.SETTINGS, label: 'CONFIG', icon: Settings },
+    { screen: AppScreen.DASHBOARD, label: 'EXAME', icon: ClipboardList },
+    { screen: AppScreen.STUDENTS, label: 'ALUNOS', icon: Users },
+    { screen: AppScreen.SELECTION, label: 'SELEÇÃO', icon: CheckSquare },
+    { screen: AppScreen.EVALUATION, label: 'AVALIAÇÃO', icon: Shield },
+    { screen: AppScreen.RESULTS, label: 'RESULTADOS', icon: Award },
   ];
 
   const handleNavClick = (screen: AppScreen) => {
@@ -35,52 +35,64 @@ const Header: React.FC<HeaderProps> = ({ currentScreen, setScreen, isTrial, onLo
 
   return (
     <>
-      <header className="bg-bushido-black text-white shadow-lg sticky top-0 z-40 no-print">
+      <header className="bg-bushido-black/90 backdrop-blur-md border-b border-white/5 sticky top-0 z-40 no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2 z-50 cursor-pointer" onClick={() => setScreen(AppScreen.DOJO)}>
-              <div className="bg-bushido-red p-1.5 rounded">
-                <Shield className="h-6 w-6 text-white" />
+          <div className="flex justify-between items-center h-24">
+            {/* Logo Area */}
+            <div className="flex items-center gap-4 cursor-pointer group" onClick={() => setScreen(AppScreen.DOJO)}>
+              <div className="bg-gradient-to-br from-bushido-red to-red-900 p-2.5 transform -skew-x-12 border border-red-500/30 shadow-[0_0_15px_rgba(220,38,38,0.3)] group-hover:shadow-[0_0_25px_rgba(220,38,38,0.5)] transition-all">
+                <Shield className="h-7 w-7 text-white transform skew-x-12" />
               </div>
-              <div>
-                  <h1 className="text-xl font-bold font-jp tracking-wider">BUSHIDO</h1>
-                  <p className="text-xs text-gray-400 -mt-1 uppercase tracking-widest">Graduation Manager</p>
+              <div className="flex flex-col">
+                  <h1 className="text-3xl font-display font-bold tracking-[0.1em] text-white leading-none">BUSHIDO</h1>
+                  <div className="flex items-center gap-2">
+                     <span className="h-[2px] w-6 bg-bushido-red"></span>
+                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.3em]">Manager</p>
+                  </div>
               </div>
             </div>
 
-            <nav className="hidden md:flex space-x-1 items-center">
+            {/* Desktop Nav */}
+            <nav className="hidden md:flex items-center gap-1">
               {navItems.map((item) => (
                 <button
                   key={item.screen}
                   onClick={() => setScreen(item.screen)}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
+                  className={`relative px-5 py-2.5 text-sm font-display font-bold tracking-wider uppercase transition-all flex items-center gap-2 overflow-hidden group transform hover:-skew-x-12 ${
                     currentScreen === item.screen
-                      ? 'bg-bushido-dark text-bushido-red border-b-2 border-bushido-red'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      ? 'text-white'
+                      : 'text-gray-500 hover:text-white'
                   }`}
                 >
-                  <item.icon className="w-4 h-4" />
-                  {item.label}
+                  {/* Background Hover Effect */}
+                  <span className={`absolute inset-0 bg-bushido-red/10 transform transition-transform duration-200 origin-bottom ${
+                    currentScreen === item.screen ? 'scale-y-100 skew-x-12 border-b-2 border-bushido-red' : 'scale-y-0 group-hover:scale-y-100 group-hover:skew-x-12'
+                  }`}></span>
+                  
+                  <item.icon className={`w-4 h-4 relative z-10 ${currentScreen === item.screen ? 'text-bushido-red' : ''}`} />
+                  <span className="relative z-10">{item.label}</span>
                 </button>
               ))}
-              <div className="h-6 w-px bg-gray-700 mx-2"></div>
+              <div className="h-6 w-px bg-white/10 mx-4 rotate-12"></div>
               <button 
                 onClick={handleLogoutClick}
-                className="text-gray-300 hover:text-white p-2 rounded hover:bg-gray-800 flex items-center gap-2 text-sm"
+                className="text-gray-500 hover:text-bushido-red transition-colors p-2 hover:bg-white/5 rounded transform hover:-skew-x-12"
+                title="Sair"
               >
-                <LogOut className="w-4 h-4" /> Sair
+                <LogOut className="w-5 h-5" />
               </button>
             </nav>
             
-            <div className="md:hidden z-50">
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
               <button 
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="text-gray-300 hover:text-white p-2 focus:outline-none"
+                className="text-white p-2"
               >
                 {isMobileMenuOpen ? (
-                  <X className="h-7 w-7" />
+                  <X className="h-8 w-8" />
                 ) : (
-                  <Menu className="h-7 w-7" />
+                  <Menu className="h-8 w-8" />
                 )}
               </button>
             </div>
@@ -88,48 +100,49 @@ const Header: React.FC<HeaderProps> = ({ currentScreen, setScreen, isTrial, onLo
         </div>
       </header>
 
+      {/* Mobile Drawer */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-40 md:hidden transition-opacity"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       <div 
-        className={`fixed inset-y-0 left-0 w-64 bg-bushido-black z-50 transform transition-transform duration-300 ease-in-out md:hidden shadow-2xl border-r border-gray-800 ${
-          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed inset-y-0 right-0 w-80 bg-bushido-black border-l border-white/10 z-50 transform transition-transform duration-300 ease-out md:hidden ${
+          isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="flex flex-col h-full">
-          <div className="h-16 flex items-center px-6 border-b border-gray-800 bg-bushido-dark">
-            <span className="text-white font-jp font-bold text-lg tracking-wider">MENU</span>
+        <div className="flex flex-col h-full bg-noise">
+          <div className="h-24 flex items-center justify-between px-8 border-b border-white/5">
+             <span className="text-white font-display font-bold text-2xl tracking-widest uppercase">Menu</span>
+             <button onClick={() => setIsMobileMenuOpen(false)} className="text-gray-500"><X/></button>
           </div>
 
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+          <nav className="flex-1 px-6 py-8 space-y-4 overflow-y-auto">
             {navItems.map((item) => (
               <button
                 key={item.screen}
                 onClick={() => handleNavClick(item.screen)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all ${
+                className={`w-full btn-blade flex items-center gap-4 px-6 py-5 text-lg font-display font-bold uppercase tracking-wider ${
                   currentScreen === item.screen
-                    ? 'bg-bushido-red text-white shadow-lg'
-                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                    ? 'bg-bushido-red text-white shadow-[0_0_20px_rgba(220,38,38,0.4)] border-none'
+                    : 'bg-bushido-surface text-gray-500 border border-white/5'
                 }`}
               >
                 <item.icon className="w-5 h-5" />
-                {item.label}
+                <span>{item.label}</span>
               </button>
             ))}
           </nav>
 
-          <div className="p-4 border-t border-gray-800 space-y-4">
+          <div className="p-8 border-t border-white/5 bg-bushido-surface">
              <button 
                 onClick={handleLogoutClick}
-                className="w-full flex items-center justify-center gap-2 bg-gray-800 text-white py-2 rounded hover:bg-gray-700"
+                className="w-full btn-blade bg-black border border-red-900/30 text-red-500 hover:text-white hover:bg-red-900/50 py-4 flex items-center justify-center gap-3 font-display font-bold uppercase tracking-widest text-sm"
               >
-                <LogOut className="w-4 h-4" /> Sair
+                <LogOut className="w-4 h-4" /> <span>Encerrar Sessão</span>
              </button>
-            <p className="text-xs text-gray-600 text-center">v1.3.0</p>
           </div>
         </div>
       </div>

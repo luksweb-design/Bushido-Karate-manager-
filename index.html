@@ -1,39 +1,92 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="https://lucide.dev/icons/sword.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bushido Karate Manager</title>
+    <title>Bushido Graduation Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Oswald:wght@400;500;700&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-              jp: ['Noto Sans JP', 'sans-serif'],
-            },
             colors: {
-              bushido: {
-                red: '#D81111',
-                black: '#111111',
-                gray: '#F5F5F5',
-                dark: '#1a1a1a'
-              }
+              'bushido-black': '#050505',
+              'bushido-surface': '#121212',
+              'bushido-card': '#1E1E1E',
+              'bushido-red': { DEFAULT: '#DC2626', dark: '#991B1B', glow: '#ff4d4d' },
+              'bushido-gold': { DEFAULT: '#F59E0B', metallic: '#D97706' },
+            },
+            fontFamily: {
+              display: ['Oswald', 'sans-serif'], // Títulos
+              sans: ['Inter', 'sans-serif'],     // Corpo
+            },
+            backgroundImage: {
+              'noise': "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjMDUwNTA1Ij48L3JlY3Q+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiPjwvcmVjdD4KPC9zdmc+')",
             }
           }
         }
       }
     </script>
     <style>
-      @media print {
-        .no-print { display: none !important; }
-        .print-only { display: block !important; }
-        body { background: white; color: black; }
+      body { 
+        background-color: #050505; 
+        color: #e5e5e5;
+        font-family: 'Inter', sans-serif;
       }
-      .print-only { display: none; }
+      
+      /* The Blade Shape Logic */
+      .btn-blade { 
+        transform: skewX(-10deg); 
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      /* Desfazer a inclinação no conteúdo interno para leitura */
+      .btn-blade > * { 
+        transform: skewX(10deg); 
+      }
+      .btn-blade:hover {
+        transform: skewX(-10deg) translateY(-2px);
+        box-shadow: 0 0 15px rgba(220, 38, 38, 0.4);
+      }
+      .btn-blade:active {
+        transform: skewX(-10deg) translateY(0);
+      }
+      .btn-blade:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: skewX(-10deg);
+        box-shadow: none;
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: #121212; }
+      ::-webkit-scrollbar-thumb { background: #333; border-radius: 0px; }
+      ::-webkit-scrollbar-thumb:hover { background: #DC2626; }
+
+      /* Inputs */
+      .input-bushido {
+        background-color: #121212;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: white;
+        transition: all 0.2s;
+        font-family: 'Inter', sans-serif;
+      }
+      .input-bushido:focus {
+        border-color: #DC2626;
+        outline: none;
+        box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.5);
+        background-color: #1a1a1a;
+      }
+
+      @media print {
+        body { background: white; color: black; }
+        .no-print { display: none !important; }
+      }
     </style>
   <script type="importmap">
 {
@@ -55,7 +108,7 @@
 }
 </script>
 </head>
-  <body class="bg-gray-100 text-gray-900">
+  <body>
     <div id="root"></div>
   </body>
 </html>
